@@ -35,6 +35,7 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 
 	// Collections
+	PaymentStore   collections.Map[string, types.StoragePaymentInfo]
 	FileStore      collections.Map[string, types.File]      // file_id -> File
 	BinStore       collections.Map[string, types.Bin]       // file_id -> File
 	ProviderStore  collections.Map[string, types.Provider]  // address -> Provider

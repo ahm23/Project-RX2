@@ -43,6 +43,7 @@ func validateBuy(days int64, bytes int64, denom string) (duration time.Duration,
 func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (*types.MsgBuyStorageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	/// --- Validate request
 	if msg.Receiver == "" {
 		msg.Receiver = msg.Creator
 	}
@@ -68,12 +69,13 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		return nil, errors.Wrapf(err, "failed to validate buy request")
 	}
 
+	/// --- Compute storage cost
 	hours := math.NewInt(duration.Milliseconds()).Quo(math.NewInt(60 * 60 * 1000))
 	storageCost := k.GetStorageCost(ctx, gbs, hours.Int64())
 
 	toPay := sdk.NewCoin(msg.PaymentDenom, storageCost)
 
-	// TODO: process payment & generate storage credits
+	/// --- Process payment
 	accExists := k.authKeeper.HasAccount(ctx, recipient)
 	if !accExists {
 		defer telemetry.IncrCounter(1, "new", "account") // [TBD]: do I want/need this?
@@ -94,6 +96,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	}
 	k.SetStoragePaymentInfo(ctx, payInfo)
 
+	/// --- Emit events
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
