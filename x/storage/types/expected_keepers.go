@@ -11,7 +11,11 @@ import (
 // AuthKeeper defines the expected interface for the Auth module.
 type AuthKeeper interface {
 	AddressCodec() address.Codec
+
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI // only used for simulation
+	HasAccount(context.Context, sdk.AccAddress) bool
+	SetAccount(context.Context, sdk.AccountI)
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) sdk.AccountI
 	// Methods imported from account should be defined here
 }
 

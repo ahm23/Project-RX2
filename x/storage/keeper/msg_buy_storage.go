@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -40,13 +41,18 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	params := k.Params.Get(ctx)
 
-	if msg.ForAddress == "" {
-		msg.ForAddress = msg.Creator
+	if msg.Recipient == "" {
+		msg.Recipient = msg.Creator
 	}
 
-	forAddr, err := sdk.AccAddressFromBech32(msg.ForAddress)
+	recipient, err := sdk.AccAddressFromBech32(msg.Recipient)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "for address is not a proper bech32")
+	}
+
+	_, found := k.GetStoragePaymentInfo(ctx, recipient.String())
+	if found {
+		return nil, sdkerrors.Wrap(err, "account has an active storage subscription, consider upgrading storage")
 	}
 
 	duration, gbs, err := validateBuy(msg.Duration, msg.Bytes, msg.PaymentDenom)
@@ -60,6 +66,19 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	toPay := sdk.NewCoin(msg.PaymentDenom, storageCost)
 
 	// TODO: process payment & generate storage credits
+	accExists := k.authKeeper.HasAccount(ctx, recipient)
+	if !accExists {
+		defer telemetry.IncrCounter(1, "new", "account") // TBD: do I want/need this?
+		k.authKeeper.SetAccount(ctx, k.authKeeper.NewAccountWithAddress(ctx, recipient))
+	}
+
+	payInfo := types.StoragePaymentInfo{
+		Start:          ctx.BlockTime(),
+		End:            ctx.BlockTime().Add(duration),
+		SpaceAvailable: bytes,
+		SpaceUsed:      spaceUsed,
+		Address:        forAddress.String(),
+	}
 
 	return &types.MsgBuyStorageResponse{}, nil
 }

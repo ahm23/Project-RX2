@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,12 +26,28 @@ func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdk.Int 
 
 	totalCost := finalPricePerGbHour.MulInt64(gbs).MulInt64(hours)
 
-	// TODO: oracle for price
-	// nblxPrice := k.GetNblxPrice(ctx)
 	nblxPrice := sdk.NewDec(3.5)
-
 	nblxCost := totalCost.Quo(nblxPrice)
 	unblxCost := nblxCost.MulInt64(unblxUnit)
 
 	return unblxCost.TruncateInt()
+}
+
+// TODO
+func (k Keeper) GetStoragePaymentInfo(
+	ctx sdk.Context,
+	address string,
+) (val types.StoragePaymentInfo, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.StoragePaymentInfoKeyPrefix))
+
+	b := store.Get(types.StoragePaymentInfoKey(
+		address,
+	))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	// k.FixStoragePaymentInfo(ctx, val)
+	return val, true
 }
