@@ -46,9 +46,6 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 		),
 	)
 
-	// [TODO]: storage account update
-
-	// totalSize := msg.FileSize
 	// paymentInfo, found := k.GetStoragePaymentInfo(ctx, msg.Creator)
 	// if !found {
 	// 	return nil, sdkerrors.ErrKeyNotFound.Wrapf("storage account does not exist")
@@ -57,7 +54,7 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 	// 	return nil, sdkerrors.ErrUnauthorized.Wrapf("storage account is expired")
 	// }
 
-	// paymentInfo.SpaceUsed += totalSize
+	// paymentInfo.SpaceUsed += msg.FileSize
 	// if paymentInfo.SpaceUsed > paymentInfo.SpaceAvailable {
 	// 	return nil, sdkerrors.ErrUnauthorized.Wrapf("storage account does not have enough space available %d > %d", paymentInfo.SpaceUsed, paymentInfo.SpaceAvailable)
 	// }

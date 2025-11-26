@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"cosmossdk.io/store/prefix"
+	"nebulix/x/storage/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -33,21 +34,30 @@ func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdk.Int 
 	return unblxCost.TruncateInt()
 }
 
-// TODO
+// [TODO]
 func (k Keeper) GetStoragePaymentInfo(
 	ctx sdk.Context,
 	address string,
 ) (val types.StoragePaymentInfo, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.StoragePaymentInfoKeyPrefix))
+	// store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.StoragePaymentInfoKeyPrefix))
 
-	b := store.Get(types.StoragePaymentInfoKey(
-		address,
-	))
-	if b == nil {
-		return val, false
-	}
+	// b := store.Get(types.StoragePaymentInfoKey(
+	// 	address,
+	// ))
+	// if b == nil {
+	// 	return val, false
+	// }
 
-	k.cdc.MustUnmarshal(b, &val)
+	// k.cdc.MustUnmarshal(b, &val)
 	// k.FixStoragePaymentInfo(ctx, val)
 	return val, true
+}
+
+// [TODO]
+func (k Keeper) SetStoragePaymentInfo(ctx sdk.Context, payInfo types.StoragePaymentInfo) {
+	// store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.StoragePaymentInfoKeyPrefix))
+	// b := k.cdc.MustMarshal(&payInfo)
+	// store.Set(types.StoragePaymentInfoKey(
+	// 	payInfo.Address,
+	// ), b)
 }

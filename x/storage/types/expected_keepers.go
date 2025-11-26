@@ -23,6 +23,8 @@ type AuthKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(context.Context, sdk.AccAddress) sdk.Coins
 	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
+
+	SendCoinsFromAccountToModule(context.Context, sdk.AccAddress, string, sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
 
