@@ -64,14 +64,14 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		return nil, errors.Wrapf(err, "account has an active storage subscription, consider upgrading storage")
 	}
 
+	// [TBD]: do I need to return duration?
 	duration, gbs, err := validateBuy(msg.Duration, msg.Bytes, msg.PaymentDenom)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to validate buy request")
 	}
 
 	/// --- Compute storage cost
-	hours := math.NewInt(duration.Milliseconds()).Quo(math.NewInt(60 * 60 * 1000))
-	storageCost := k.GetStorageCost(ctx, gbs, hours.Int64())
+	storageCost := k.GetStorageCost(ctx, gbs, msg.Duration)
 
 	toPay := sdk.NewCoin(msg.PaymentDenom, storageCost)
 
@@ -82,7 +82,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		k.authKeeper.SetAccount(ctx, k.authKeeper.NewAccountWithAddress(ctx, recipient))
 	}
 
-	seconds := hours.Mul(math.NewInt(60 * 60))
+	seconds := math.NewInt(msg.Duration).Mul(math.NewInt(60 * 60))
 	credits := math.NewInt(msg.Bytes).Mul(seconds)
 	payInfo := types.StoragePaymentInfo{
 		Start:          ctx.BlockTime().Truncate(time.Second),
@@ -115,7 +115,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 			sdk.NewAttribute(types.AttributeKeyBuyer, msg.Creator),
 			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Receiver),
 			sdk.NewAttribute(types.AttributeKeyBytesBought, fmt.Sprintf("%d", msg.Bytes)),
-			sdk.NewAttribute(types.AttributeKeyTimeBought, hours.String()),
+			sdk.NewAttribute(types.AttributeKeyTimeBought, fmt.Sprintf("%d", msg.Duration)),
 		),
 	)
 

@@ -3,6 +3,7 @@ package keeper
 import (
 	"nebulix/x/storage/types"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,27 +12,20 @@ const (
 	unblxUnit int64 = 1000000
 )
 
-func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdk.Int {
-	basePricePerGBHour := sdk.NewDec(k.Params.Get(ctx).PricePerGBHour)
+func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, days int64) math.Int {
+	params, _ := k.Params.Get(ctx)
+	pricePerGBDay := math.NewInt(params.PricePerGBDay)
 
-	var finalPricePerGbHour sdk.Dec
+	// [TBD]: verify this can't overflow in an attack attempt
+	totalCost := pricePerGBDay.MulRaw(gbs).MulRaw(days)
 
-	switch {
-	case gbs >= 20_000:
-		finalPricePerGbHour = basePricePerGBHour.Mul(sdk.MustNewDecFromStr("12.5").QuoInt64(15))
-	case gbs >= 5_000:
-		finalPricePerGbHour = basePricePerGBHour.Mul(sdk.NewDec(14).QuoInt64(15))
-	default:
-		finalPricePerGbHour = basePricePerGBHour
-	}
+	// [TODO]: oracle for price fetching
+	nblxPrice, _ := math.LegacyNewDecFromStr("1000")
+	// ^ temporary price for testing
+	nblxCost := math.LegacyDec(totalCost).Quo(nblxPrice)
+	unblxCost := math.NewInt(nblxCost.MulInt64(unblxUnit).Ceil().BigInt().Int64())
 
-	totalCost := finalPricePerGbHour.MulInt64(gbs).MulInt64(hours)
-
-	nblxPrice := sdk.NewDec(3.5)
-	nblxCost := totalCost.Quo(nblxPrice)
-	unblxCost := nblxCost.MulInt64(unblxUnit)
-
-	return unblxCost.TruncateInt()
+	return unblxCost
 }
 
 // [TODO]

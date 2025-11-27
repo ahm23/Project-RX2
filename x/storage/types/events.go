@@ -12,7 +12,7 @@ const (
 	AttributeKeyBuyer       = "buyer" // buy storage
 	AttributeKeyReceiver    = "recipient"
 	AttributeKeyBytesBought = "bytes_bought"
-	AttributeKeyTimeBought  = "hours_bought"
+	AttributeKeyTimeBought  = "days_bought"
 
 	AttributeKeySigner   = "signer" // sign storage deal
 	AttributeKeyContract = "file"
