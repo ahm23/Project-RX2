@@ -35,11 +35,12 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 
 	// Collections
-	PaymentStore   collections.Map[string, types.StoragePaymentInfo]
-	FileStore      collections.Map[string, types.File]      // file_id -> File
-	BinStore       collections.Map[string, types.Bin]       // file_id -> File
-	ProviderStore  collections.Map[string, types.Provider]  // address -> Provider
-	ChallengeStore collections.Map[string, types.Challenge] // challenge_id -> Challenge
+	PaymentStore        collections.Map[string, types.StoragePaymentInfo]
+	StorageAccountStore collections.Map[string, types.StorageAccountInfo]
+	FileStore           collections.Map[string, types.File]      // file_id -> File
+	BinStore            collections.Map[string, types.Bin]       // file_id -> File
+	ProviderStore       collections.Map[string, types.Provider]  // address -> Provider
+	ChallengeStore      collections.Map[string, types.Challenge] // challenge_id -> Challenge
 
 	// Indicies
 	FilesByProvider collections.KeySet[string] // provider_address|file_id -> {}

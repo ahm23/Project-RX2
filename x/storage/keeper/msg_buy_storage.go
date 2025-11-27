@@ -82,10 +82,12 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		k.authKeeper.SetAccount(ctx, k.authKeeper.NewAccountWithAddress(ctx, recipient))
 	}
 
+	seconds := hours.Mul(math.NewInt(60 * 60))
+	credits := math.NewInt(msg.Bytes).Mul(seconds)
 	payInfo := types.StoragePaymentInfo{
-		Start:          ctx.BlockTime(),
-		End:            ctx.BlockTime().Add(duration),
-		SpaceAvailable: msg.Bytes,
+		Start:          ctx.BlockTime().Truncate(time.Second),
+		End:            ctx.BlockTime().Truncate(time.Second).Add(duration),
+		SpaceAvailable: msg.Bytes * 3,
 		SpaceUsed:      0,
 		Address:        recipient.String(),
 	}
@@ -94,6 +96,9 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot send tokens from %s", msg.Creator)
 	}
+
+	// [TBD]: do I need error handling here?
+	k.ResetStorageCredits(ctx, msg.Receiver, credits)
 	k.SetStoragePaymentInfo(ctx, payInfo)
 
 	/// --- Emit events

@@ -1,6 +1,9 @@
 package types
 
-import "cosmossdk.io/collections"
+import (
+	"cosmossdk.io/collections"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
 
 const (
 	// ModuleName defines the module name
@@ -17,3 +20,4 @@ const (
 
 // ParamsKey is the prefix to retrieve all Params
 var ParamsKey = collections.NewPrefix("p_storage")
+var ModuleAddress = authtypes.NewModuleAddress(ModuleName)

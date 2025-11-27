@@ -4,11 +4,16 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"nebulix/x/storage/types"
 
+	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*types.MsgPostFileResponse, error) {
@@ -19,17 +24,41 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 
 	// [TODO]: bad file msg checks
 
+	/// --- Index the file
 	file := types.File{
 		Merkle:    hex.EncodeToString(msg.Merkle),
 		Owner:     msg.Creator,
 		Start:     ctx.BlockHeight(),
 		FileSize:  msg.FileSize,
-		Providers: msg.Providers, // [TODO]: ensure first challenge doesn't slash, just removes, to avoid framing providers
+		Providers: msg.Providers,
 		Replicas:  msg.Replicas,
 	}
-
 	k.SetFile(ctx, file)
 
+	/// --- Handle storage usage
+	if subscription, found := k.GetStoragePaymentInfo(ctx, msg.Creator); found {
+		if subscription.End.Before(ctx.BlockTime()) {
+			// [TBD]: can I handle storage account expiry here? appstate remains unchanged on error so, idk how
+			return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "storage account is expired")
+		}
+
+		credits := math.NewInt(msg.FileSize).Mul(math.NewInt(int64(subscription.End.Sub(ctx.BlockTime()) / time.Second)))
+
+		subscription.SpaceUsed += msg.FileSize
+		k.TransferStorageCredits(ctx, msg.Creator, types.ModuleAddress.String(), credits)
+
+		// sub credits
+
+		if subscription.SpaceUsed > subscription.SpaceAvailable {
+			return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "storage account does not have enough space available %d > %d", subscription.SpaceUsed, subscription.SpaceAvailable)
+		}
+
+		k.SetStoragePaymentInfo(ctx, subscription)
+	} else {
+		return nil, errors.Wrapf(sdkerrors.ErrKeyNotFound, "storage account does not exist")
+	}
+
+	/// --- Emit events
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -45,21 +74,6 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 			sdk.NewAttribute(types.AttributeKeyStart, fmt.Sprintf("%d", ctx.BlockHeight())),
 		),
 	)
-
-	// paymentInfo, found := k.GetStoragePaymentInfo(ctx, msg.Creator)
-	// if !found {
-	// 	return nil, sdkerrors.ErrKeyNotFound.Wrapf("storage account does not exist")
-	// }
-	// if paymentInfo.End.Before(ctx.BlockTime()) {
-	// 	return nil, sdkerrors.ErrUnauthorized.Wrapf("storage account is expired")
-	// }
-
-	// paymentInfo.SpaceUsed += msg.FileSize
-	// if paymentInfo.SpaceUsed > paymentInfo.SpaceAvailable {
-	// 	return nil, sdkerrors.ErrUnauthorized.Wrapf("storage account does not have enough space available %d > %d", paymentInfo.SpaceUsed, paymentInfo.SpaceAvailable)
-	// }
-
-	// k.SetStoragePaymentInfo(ctx, paymentInfo)
 
 	return &types.MsgPostFileResponse{StartBlock: ctx.BlockHeight()}, nil
 }
