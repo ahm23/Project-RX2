@@ -17,11 +17,8 @@ service Msg {
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
-
-  // InitProvider defines the InitProvider RPC.
   rpc InitProvider(MsgInitProvider) returns (MsgInitProviderResponse);
-
-  // PostFile defines the PostFile RPC.
+  rpc BuyStorage(MsgBuyStorage) returns (MsgBuyStorageResponse);
   rpc PostFile(MsgPostFile) returns (MsgPostFileResponse);
 }
 
@@ -57,6 +54,16 @@ message MsgInitProvider {
 
 // MsgInitProviderResponse defines the MsgInitProviderResponse message.
 message MsgInitProviderResponse {}
+
+// MsgBuyStorage & MsgBuyStorageResponse
+message MsgBuyStorage {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string receiver = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  int64 duration = 3;
+  int64 bytes = 4;
+}
+message MsgBuyStorageResponse { }
 
 // MsgPostFile defines the MsgPostFile message.
 message MsgPostFile {
