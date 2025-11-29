@@ -21,12 +21,10 @@ type StorageAccountInfo struct {
 }
 
 type MsgBuyStorage struct {
-	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Receiver     string `protobuf:"bytes,2,opt,name=receiver,json=receiver,proto3" json:"receiver,omitempty"`
-	Duration     int64  `protobuf:"varint,3,opt,name=duration_days,json=durationDays,proto3" json:"duration_days,omitempty"`
-	Bytes        int64  `protobuf:"varint,4,opt,name=bytes,proto3" json:"bytes,omitempty"`
-	PaymentDenom string `protobuf:"bytes,5,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
-	Referral     string `protobuf:"bytes,6,opt,name=referral,proto3" json:"referral,omitempty"`
+	Creator  string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Receiver string `protobuf:"bytes,2,opt,name=receiver,json=receiver,proto3" json:"receiver,omitempty"`
+	Duration int64  `protobuf:"varint,3,opt,name=duration_days,json=durationDays,proto3" json:"duration_days,omitempty"`
+	Bytes    int64  `protobuf:"varint,4,opt,name=bytes,proto3" json:"bytes,omitempty"`
 }
 type MsgBuyStorageResponse struct {
 }

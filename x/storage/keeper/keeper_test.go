@@ -19,6 +19,7 @@ import (
 	"nebulix/x/storage/types"
 )
 
+// [TODO] pump this into deepseek; ask how to handle the expected keepers as well (bankKeeper & authKeeper)
 type KeeperTestSuite struct {
 	suite.Suite
 
